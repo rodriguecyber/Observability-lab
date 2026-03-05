@@ -9,7 +9,7 @@ pipeline {
         )
         string(
             name: 'EC2_PUBLIC_IP',
-            defaultValue: '51.21.150.87',
+            defaultValue: '13.61.5.224',
             description: 'EC2 instance public IP for SSH deploy (required when DEPLOY_SSH=true). Get from Terraform output or AWS Console.'
         )
     }

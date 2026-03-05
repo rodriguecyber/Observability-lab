@@ -54,7 +54,7 @@ pipeline {
                     sh '''#!/bin/bash
                         set -e
                         EC2_IP="''' + params.EC2_PUBLIC_IP.trim() + '''"
-                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP "cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build"
+                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP "git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build"
                     '''
                 }
             }

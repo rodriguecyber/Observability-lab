@@ -49,12 +49,12 @@ pipeline {
         
 
         stage('Deploy to EC2 (SSH)') {
-            when {
-                allOf {
-                    expression { return params.DEPLOY_SSH == 'true' }
-                    expression { return params.EC2_PUBLIC_IP?.trim() }
-                }
-            }
+            // when {
+            //     allOf {
+            //         expression { return params.DEPLOY_SSH == 'true' }
+            //         expression { return params.EC2_PUBLIC_IP?.trim() }
+            //     }
+            // }
             steps {
                 sshagent(['EC2-SSH-KEY']) {
                     sh '''#!/bin/bash

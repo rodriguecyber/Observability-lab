@@ -36,7 +36,6 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            when { expression { return params.DEPLOY_INFRA != 'true' } }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PSWD', usernameVariable: 'UNAME')]) {
                     sh 'docker build -t $UNAME/observability-app:latest .'
@@ -49,12 +48,7 @@ pipeline {
         
 
         stage('Deploy to EC2 (SSH)') {
-            // when {
-            //     allOf {
-            //         expression { return params.DEPLOY_SSH == 'true' }
-            //         expression { return params.EC2_PUBLIC_IP?.trim() }
-            //     }
-            // }
+            
             steps {
                 sshagent(['EC2-SSH-KEY']) {
                     sh '''#!/bin/bash

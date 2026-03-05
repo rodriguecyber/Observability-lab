@@ -4,7 +4,7 @@
 variable "aws_region" {
   description = "AWS region for all resources."
   type        = string
-  default     = "us-east-2"
+  default     = "eu-north-1"
 }
 
 variable "name_prefix" {
@@ -13,11 +13,17 @@ variable "name_prefix" {
   default     = "observability"
 }
 
+variable "vpc_cidr" {
+  description = "CIDR for the created VPC."
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
 # -----------------------------------------------------------------------------
-# EC2
+# EC2 (VPC is created by this stack; see vpc.tf)
 # -----------------------------------------------------------------------------
 variable "ami_id" {
-  description = "AMI ID for EC2. Defaults to Ubuntu 22.04 if empty."
+  description = "AMI ID for EC2. Empty = use latest Ubuntu 22.04 in configured region (recommended)."
   type        = string
   default     = ""
 }
@@ -26,12 +32,6 @@ variable "instance_type" {
   description = "EC2 instance type for the monitoring host."
   type        = string
   default     = "t3.micro"
-}
-
-variable "subnet_id" {
-  description = "Subnet ID for EC2. Uses first default VPC subnet if empty."
-  type        = string
-  default     = ""
 }
 
 variable "key_name" {

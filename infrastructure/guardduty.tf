@@ -1,20 +1,4 @@
 # -----------------------------------------------------------------------------
-# GuardDuty: threat detection (one detector per account/region)
+# GuardDuty: reference existing detector (one per account/region; do not create)
 # -----------------------------------------------------------------------------
-resource "aws_guardduty_detector" "main" {
-  count  = var.enable_guardduty ? 1 : 0
-  enable = true
-
-  datasources {
-    s3_logs {
-      enable = true
-    }
-    malware_protection {
-      scan_ec2_instance_with_findings {
-        ebs_volumes {
-          enable = true
-        }
-      }
-    }
-  }
-}
+data "aws_guardduty_detector" "main" {}

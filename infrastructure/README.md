@@ -46,6 +46,19 @@ Outputs: `ec2_public_ip`, `grafana_url`, `prometheus_url`, `app_url`, `ssh_comma
 2. Clone the GitHub repo
 3. `docker compose up -d` (or with CloudWatch override if log group is set)
 
+## CI/CD (Jenkins)
+
+The root `Jenkinsfile` can run Terraform from the pipeline:
+
+1. **Parameter `DEPLOY_INFRA`** – set to `true` to run the "Deploy Infrastructure (Terraform)" stage; `false` runs only checkout, test, and optional Docker build/push.
+2. **Jenkins credentials** (for Terraform stage):
+   - `aws-access-key-id` – Secret text, value = AWS access key ID.
+   - `aws-secret-access-key` – Secret text, value = AWS secret access key.
+3. **Terraform** must be installed on the Jenkins agent (or run in a container that has Terraform).
+4. **`infrastructure/terraform.tfvars`** – should exist in the repo (or be generated in the job) with `key_name`, `github_repo_url`, etc. Do not commit secrets; use Jenkins credentials for AWS only.
+
+Pipeline runs `terraform init`, `terraform plan -out=tfplan`, `terraform apply -auto-approve tfplan` inside `infrastructure/`.
+
 ## Optional: disable CloudTrail / GuardDuty / CloudWatch
 
 Set in `terraform.tfvars`:

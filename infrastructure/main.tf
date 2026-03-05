@@ -18,10 +18,10 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-# Ubuntu 22.04 LTS (amd64)
+# Resolve current Ubuntu 22.04 AMI (avoids "couldn't find resource" from deprecated static AMI)
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
@@ -34,28 +34,17 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Default VPC and subnets for EC2 placement
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 # -----------------------------------------------------------------------------
 # Observability EC2 stack (instance, security group, user_data)
+# VPC and subnet are created in vpc.tf; module uses their IDs.
 # -----------------------------------------------------------------------------
 module "observability" {
   source = "./modules/observability"
 
   name_prefix  = var.name_prefix
-  vpc_id       = data.aws_vpc.default.id
-  subnet_id    = var.subnet_id != "" ? var.subnet_id : tolist(data.aws_subnets.default.ids)[0]
-  ami_id       = coalesce(var.ami_id, data.aws_ami.ubuntu.id)
+  vpc_id       = aws_vpc.observability.id
+  subnet_id    = aws_subnet.observability_public.id
+  ami_id       = var.ami_id != "" ? var.ami_id : data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name     = var.key_name
   iam_instance_profile_name = aws_iam_instance_profile.ec2_observability.name
@@ -66,4 +55,11 @@ module "observability" {
   node_exporter_port = var.node_exporter_port
 
   user_data = local.observability_user_data
+
+  depends_on = [
+    aws_vpc.observability,
+    aws_subnet.observability_public,
+    aws_route_table_association.observability_public,
+    aws_iam_instance_profile.ec2_observability,
+  ]
 }

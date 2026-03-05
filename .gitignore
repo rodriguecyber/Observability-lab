@@ -2,4 +2,11 @@
 package-lock.json
 dist
 .env
-iac
+*.tfstate
+*.tfstate.*
+.terraform/
+iac/terraform/.terraform/
+iac/terraform/*.tfvars
+!iac/terraform/terraform.tfvars.example
+docs/screenshots/*.png
+!docs/screenshots/.gitkeep

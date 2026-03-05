@@ -1,0 +1,14 @@
+# Override to stream container logs to CloudWatch Logs.
+# Requires: AWS credentials (env or IAM role), log group created in advance.
+# Create log group: aws logs create-log-group --log-group-name /jenkins-lab/app
+# Usage: docker compose -f docker-compose.yml -f docker-compose.cloudwatch.yml up -d
+
+services:
+  app:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-group: ${CLOUDWATCH_LOG_GROUP:-/jenkins-lab/app}
+        awslogs-stream-prefix: app
+        awslogs-create-group: "true"

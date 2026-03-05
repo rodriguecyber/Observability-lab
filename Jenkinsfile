@@ -48,16 +48,10 @@ pipeline {
         
 
         stage('Deploy to EC2 (SSH)') {
-            
             steps {
                 sshagent(['EC2-SSH-KEY']) {
-                    sh '''#!/bin/bash
-                        set -e
-                        EC2_IP="''' + params.EC2_PUBLIC_IP.trim() + '''"
-                        echo "EC2_IP: $EC2_IP"
-                        ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP "git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build"
-                    '''
-                }  
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@${params.EC2_PUBLIC_IP.trim()} 'git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build'"
+                }
             }
             post {
                 success {

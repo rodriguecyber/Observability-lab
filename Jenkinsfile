@@ -57,7 +57,7 @@ pipeline {
                         echo "EC2_IP: $EC2_IP"
                         ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP "git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build"
                     '''
-                }
+                }  
             }
             post {
                 success {

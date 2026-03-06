@@ -50,6 +50,7 @@ pipeline {
         stage('Deploy to EC2 (SSH)') {
             steps {
                 sshagent(['EC2-SSH-KEY']) {
+                    echo "Deploying to EC2 (${params.EC2_PUBLIC_IP})"
                     sh "ssh -o StrictHostKeyChecking=no ubuntu@${params.EC2_PUBLIC_IP.trim()} 'git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build'"
                 }
             }

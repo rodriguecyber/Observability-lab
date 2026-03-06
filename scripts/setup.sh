@@ -1,17 +1,10 @@
 #!/bin/bash
 # -----------------------------------------------------------------------------
-# Observability EC2 user_data: install Docker, clone repo, start stack.
-# Rendered by Terraform templatefile() with: github_repo_url, github_branch,
-# aws_region, cloudwatch_log_group.
+# EC2 user_data: install Docker only. No git clone; deployment is via Jenkins
+# (push images to Docker Hub, scp compose + config, pull and run on server).
 # -----------------------------------------------------------------------------
 set -e
 export DEBIAN_FRONTEND=noninteractive
-
-GITHUB_REPO_URL="${github_repo_url}"
-GITHUB_BRANCH="${github_branch}"
-AWS_REGION="${aws_region}"
-CLOUDWATCH_LOG_GROUP="${cloudwatch_log_group}"
-APP_DIR="/opt/observability-app"
 
 echo "==> Updating packages and installing Docker..."
 apt-get update -qq
@@ -28,23 +21,8 @@ systemctl enable docker
 systemctl start docker
 usermod -aG docker ubuntu
 
-echo "==> Cloning repository..."
-mkdir -p /opt
-if [ -d "$APP_DIR/.git" ]; then
-  cd "$APP_DIR" && git fetch && git checkout "$GITHUB_BRANCH" && git pull
-else
-  git clone -b "$GITHUB_BRANCH" "$GITHUB_REPO_URL" "$APP_DIR"
-fi
-cd "$APP_DIR"
+echo "==> Creating app directory (Jenkins will deploy compose + config via SSH)"
+mkdir -p /opt/observability-app
+chown ubuntu:ubuntu /opt/observability-app
 
-echo "==> Starting observability stack..."
-export AWS_REGION
-export CLOUDWATCH_LOG_GROUP
-
-if [ -n "$CLOUDWATCH_LOG_GROUP" ] && [ -f docker-compose.cloudwatch.yml ]; then
-  docker compose -f docker-compose.yml -f docker-compose.cloudwatch.yml up -d
-else
-  docker compose up -d
-fi
-
-echo "==> Setup complete. Grafana: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000"
+echo "==> Setup complete. Run first deploy from Jenkins (Deploy to EC2 stage)."

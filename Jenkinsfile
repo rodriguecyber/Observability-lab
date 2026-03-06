@@ -48,10 +48,21 @@ pipeline {
         
 
         stage('Deploy to EC2 (SSH)') {
+            when { expression { return params.DEPLOY_SSH == 'true' } }
             steps {
-                sshagent(['EC2-SSH-KEY']) {
-                    echo "Deploying to EC2 (${params.EC2_PUBLIC_IP})"
-                    sh "ssh -o StrictHostKeyChecking=no ubuntu@${params.EC2_PUBLIC_IP.trim()} 'git config --global --add safe.directory /opt/observability-app && cd /opt/observability-app && git pull && docker compose pull && docker compose up -d --build'"
+                withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PSWD', usernameVariable: 'UNAME')]) {
+                    sshagent(['EC2-SSH-KEY']) {
+                        def ip = params.EC2_PUBLIC_IP.trim()
+                        echo "Deploying to EC2 (${ip}): copy compose + config, pull images, run containers"
+                        sh """
+                            set -e
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'mkdir -p /opt/observability-app'
+                            scp -o StrictHostKeyChecking=no docker-compose.deploy.yml ubuntu@${ip}:/opt/observability-app/docker-compose.yml
+                            scp -o StrictHostKeyChecking=no -r monitoring ubuntu@${ip}:/opt/observability-app/
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'echo DOCKER_IMAGE_APP=${env.UNAME}/observability-app:latest > /opt/observability-app/.env'
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'cd /opt/observability-app && docker compose pull && docker compose up -d'
+                        """
+                    }
                 }
             }
             post {
@@ -59,7 +70,7 @@ pipeline {
                     echo "Deployed to EC2 (${params.EC2_PUBLIC_IP}). Grafana: http://${params.EC2_PUBLIC_IP}:3000 Prometheus: http://${params.EC2_PUBLIC_IP}:9090"
                 }
                 failure {
-                    echo 'SSH deploy failed. Check EC2_PUBLIC_IP and that EC2-SSH-KEY is the key used for the instance.'
+                    echo 'SSH deploy failed. Check EC2_PUBLIC_IP and EC2-SSH-KEY.'
                 }
             }
         }

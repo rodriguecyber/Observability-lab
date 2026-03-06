@@ -58,7 +58,7 @@ pipeline {
                             echo "Deploying to EC2 (${ip}): copy compose + config, pull images, run containers"
                             sh """
                                 set -e
-                                ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'mkdir -p /opt/observability-app'
+                                ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'sudo mkdir -p /opt/observability-app && sudo chown -R ubuntu:ubuntu /opt/observability-app'
                                 scp -o StrictHostKeyChecking=no docker-compose.deploy.yml ubuntu@${ip}:/opt/observability-app/docker-compose.yml
                                 scp -o StrictHostKeyChecking=no -r monitoring ubuntu@${ip}:/opt/observability-app/
                                 ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'echo DOCKER_IMAGE_APP=${image} > /opt/observability-app/.env'

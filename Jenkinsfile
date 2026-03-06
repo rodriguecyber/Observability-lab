@@ -53,13 +53,14 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'PSWD', usernameVariable: 'UNAME')]) {
                     sshagent(['EC2-SSH-KEY']) {
                         def ip = params.EC2_PUBLIC_IP.trim()
+                        def image = env.UNAME + '/observability-app:latest'
                         echo "Deploying to EC2 (${ip}): copy compose + config, pull images, run containers"
                         sh """
                             set -e
                             ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'mkdir -p /opt/observability-app'
                             scp -o StrictHostKeyChecking=no docker-compose.deploy.yml ubuntu@${ip}:/opt/observability-app/docker-compose.yml
                             scp -o StrictHostKeyChecking=no -r monitoring ubuntu@${ip}:/opt/observability-app/
-                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'echo DOCKER_IMAGE_APP=${env.UNAME}/observability-app:latest > /opt/observability-app/.env'
+                            ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'echo DOCKER_IMAGE_APP=${image} > /opt/observability-app/.env'
                             ssh -o StrictHostKeyChecking=no ubuntu@${ip} 'cd /opt/observability-app && docker compose pull && docker compose up -d'
                         """
                     }
